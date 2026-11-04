@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  text2sql-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: text2sql_agent_service
+    ports:
+      - "7860:7860"
+    environment:
+      - HF_HOME=/root/.cache/huggingface
+      - CUDA_VISIBLE_DEVICES=0
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ../data:/app/data
+      - ../outputs:/app/outputs
+      - ../db_info:/app/db_info
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
