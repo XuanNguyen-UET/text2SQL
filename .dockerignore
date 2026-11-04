@@ -1,0 +1,33 @@
+# Virtual environment & host binaries
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git & tooling metadata
+.git/
+.gitignore
+.github/
+.codegraph/
+
+# Large local datasets & weights
+checkpoints/
+lora_adapter/
+*.pt
+*.bin
+*.safetensors
+dev_profiles_explicit.json
+dev_mini_schemas_complete.json
+dev_logical_plans_all.json
+failed_replan_ids.json
+
+# Logs & temp files
+logs/
+wandb/
+*.log
+.DS_Store
+.vscode/
+.idea/
