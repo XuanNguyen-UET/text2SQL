@@ -35,7 +35,7 @@ def test_sandbox_allows_select(temp_test_db: str) -> None:
     assert res.status == "SUCCESS"
     assert res.result == [("Alice",)]
 
-refactor: polish dependency constraints, reward evaluation, and demo logging
+
 def test_sandbox_blocks_dml(temp_test_db: str) -> None:
     assert not is_readonly_query("DROP TABLE users;")
     assert not is_readonly_query("INSERT INTO users VALUES (3, 'Charlie', 35);")
