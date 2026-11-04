@@ -1,0 +1,23 @@
+slm:
+  model_id: "Qwen/Qwen3-4B-Instruct-2507"
+  backend: "vllm"
+  max_model_len: 8192
+  gpu_memory_utilization: 0.28
+  temperature: 0.0
+  max_new_tokens: 1024
+
+sql_generator:
+  model_id: "NguyenCX/Qwen2.5_coder_7B_instruct_GRPO_BIRD"
+  base_model: "Qwen/Qwen2.5-Coder-7B-Instruct"
+  backend: "vllm"
+  max_model_len: 16384
+  gpu_memory_utilization: 0.56
+  candidate_temperature: 0.7
+  repair_temperature: 0.2
+  max_new_tokens: 2048
+
+embedding:
+  model_id: "BAAI/bge-small-en-v1.5"
+  device: "cuda"
+  batch_size: 32
+  max_length: 512

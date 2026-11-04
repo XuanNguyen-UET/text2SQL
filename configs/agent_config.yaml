@@ -1,0 +1,25 @@
+schema_linking:
+  mode: "hybrid"
+  bm25_alpha: 0.6
+  semantic_beta: 0.4
+  threshold_ratio: 0.15
+  min_k_tables: 8
+  max_k_tables: 45
+  max_tables_final: 6
+  max_columns_per_table: 10
+  sample_values_limit: 5
+
+generation:
+  num_candidates: 4
+  stop_tokens:
+    - "<|im_end|>"
+    - "</answer>"
+
+sandbox:
+  timeout_seconds: 10
+  max_rows_evaluated: 50
+  read_only_enforced: true
+
+orchestrator:
+  max_repair_iterations: 2
+  max_retries: 2
