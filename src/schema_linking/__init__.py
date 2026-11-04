@@ -10,11 +10,11 @@ from src.schema_linking.pruner import FastSchemaPruner, HybridSchemaPruner, prun
 __all__ = [
     "DatabaseProfile",
     "DatabaseProfiler",
-    "LogicalPlanner",
-    "HybridSchemaPruner",
     "FastSchemaPruner",
+    "HybridSchemaPruner",
+    "LogicalPlanner",
+    "generate_mini_ddl",
     "prune_schema",
     "render_algorithmic_ddl",
-    "generate_mini_ddl",
     "validate_mini_ddl_against_profile",
 ]

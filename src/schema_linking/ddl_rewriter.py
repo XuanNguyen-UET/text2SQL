@@ -1,9 +1,11 @@
+import logging
 import re
-from typing import Any
 
 from src.models.engine import HFQuantizedRunner, VLLMRunner, apply_chat_template_safe
 from src.models.prompts import MINI_DDL_SYSTEM_PROMPT, MINI_DDL_USER_TEMPLATE
 from src.schema_linking.profiler import DatabaseProfile
+
+logger = logging.getLogger(__name__)
 
 
 def render_algorithmic_ddl(
@@ -39,7 +41,9 @@ def render_algorithmic_ddl(
             src_tbl, src_col = fk["source"].split(".")
             tgt_tbl, tgt_col = fk["target"].split(".")
             if src_tbl == table and src_col in cols and tgt_tbl in pruned_schema:
-                lines.append(f'  FOREIGN KEY ("{src_col}") REFERENCES "{tgt_tbl}" ("{tgt_col}")')
+                lines.append(
+                    f'  FOREIGN KEY ("{src_col}") REFERENCES "{tgt_tbl}" ("{tgt_col}")'
+                )
 
         table_def = f'CREATE TABLE "{table}" (\n' + ",\n".join(lines) + "\n);"
         ddl_statements.append(table_def)
@@ -58,7 +62,10 @@ def validate_mini_ddl_against_profile(mini_ddl: str, profile: DatabaseProfile) -
         if tbl not in profile.tables:
             return False
 
-    col_pattern = re.compile(r'^\s*["`]?(\w+)["`]?\s+(?:TEXT|INTEGER|REAL|BLOB|NUMERIC|VARCHAR)', re.IGNORECASE | re.MULTILINE)
+    col_pattern = re.compile(
+        r'^\s*["`]?(\w+)["`]?\s+(?:TEXT|INTEGER|REAL|BLOB|NUMERIC|VARCHAR)',
+        re.IGNORECASE | re.MULTILINE,
+    )
     declared_cols = col_pattern.findall(mini_ddl)
     all_valid_cols = {col for col_list in profile.columns.values() for col in col_list}
 
@@ -95,7 +102,9 @@ def generate_mini_ddl(
         {"role": "user", "content": user_content},
     ]
 
-    prompt = apply_chat_template_safe(runner.tokenizer, messages, add_generation_prompt=True)
+    prompt = apply_chat_template_safe(
+        runner.tokenizer, messages, add_generation_prompt=True
+    )
 
     try:
         if isinstance(runner, VLLMRunner):
@@ -107,7 +116,9 @@ def generate_mini_ddl(
         raw_output = re.sub(r"```sql|```", "", raw_output).strip()
         if validate_mini_ddl_against_profile(raw_output, profile):
             return raw_output
-    except Exception:
-        pass
+    except (RuntimeError, ValueError, TimeoutError, IndexError) as exc:
+        logger.warning(
+            "LLM Mini-DDL generation failed, falling back to algorithmic DDL: %s", exc
+        )
 
     return fallback_ddl
