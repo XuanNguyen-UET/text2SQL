@@ -1,5 +1,3 @@
-# src/models/engine.py
-import logging
 from typing import Any
 
 import numpy as np
@@ -11,8 +9,6 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
-
-logger = logging.getLogger(__name__)
 
 
 def apply_chat_template_safe(
@@ -47,8 +43,8 @@ class HuggingFaceEmbedder:
     ) -> None:
         self.device = torch.device(device)
         self.max_length = max_length
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
-        self.model = AutoModel.from_pretrained(model_id).to(self.device)
+        self.tokenizer: Any = AutoTokenizer.from_pretrained(model_id)
+        self.model: Any = AutoModel.from_pretrained(model_id).to(self.device)
         self.model.eval()
 
     def encode(self, texts: list[str], batch_size: int = 32) -> np.ndarray:
@@ -97,7 +93,9 @@ class VLLMRunner:
         from vllm import LLM
 
         self.model_id = model_id
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+        self.tokenizer: Any = AutoTokenizer.from_pretrained(
+            model_id, trust_remote_code=True
+        )
         self.llm = LLM(
             model=model_id,
             max_model_len=max_model_len,
@@ -148,9 +146,12 @@ class HFQuantizedRunner:
         torch_dtype: torch.dtype = torch.bfloat16,
     ) -> None:
         self.model_id = model_id
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+        tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+        if tokenizer is None:
+            raise ValueError(f"Failed to load tokenizer for model: {model_id}")
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+        self.tokenizer = tokenizer
 
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -159,12 +160,15 @@ class HFQuantizedRunner:
             bnb_4bit_use_double_quant=True,
         )
 
-        self.model = AutoModelForCausalLM.from_pretrained(
+        model = AutoModelForCausalLM.from_pretrained(
             model_id,
             quantization_config=bnb_config,
             device_map=device_map,
             trust_remote_code=True,
         )
+        if model is None:
+            raise ValueError(f"Failed to load causal LM model: {model_id}")
+        self.model: Any = model
         self.model.eval()
 
     def generate(
@@ -189,7 +193,8 @@ class HFQuantizedRunner:
 
         input_len = inputs["input_ids"].shape[1]
         generated_ids = output_ids[0][input_len:]
-        output_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        decoded = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        output_text: str = decoded if isinstance(decoded, str) else decoded[0]
 
         if stop_tokens:
             for stop in stop_tokens:
