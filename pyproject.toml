@@ -51,6 +51,12 @@ authors = [
     { name = "Cao Xuan Nguyen" }
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pyright]
+extraPaths = ["."]
+
 [[tool.uv.index]]
 name = "pytorch-cu121"
 url = "https://download.pytorch.org/whl/cu121"
