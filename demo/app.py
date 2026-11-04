@@ -1,3 +1,4 @@
+import logging
 import os
 
 import gradio as gr
@@ -8,33 +9,42 @@ from src.models.engine import HFQuantizedRunner, HuggingFaceEmbedder, VLLMRunner
 from src.sandbox.executor import execute_sql
 from src.schema_linking.profiler import DatabaseProfiler
 
+logger = logging.getLogger(__name__)
+
 PROFILES_PATH = os.environ.get("PROFILES_PATH", "db_info/dev_profiles_explicit.json")
 DB_DIR = os.environ.get("DB_DIR", "data/sample_databases")
 BACKEND = os.environ.get("BACKEND", "vllm")
 SLM_MODEL = os.environ.get("SLM_MODEL", "Qwen/Qwen3-4B-Instruct-2507")
 SQL_MODEL = os.environ.get("SQL_MODEL", "NguyenCX/Qwen2.5_coder_7B_instruct_GRPO_BIRD")
 
-print("[INFO] Initializing Profiler and Embedder...")
-profiler = DatabaseProfiler(
-    profiles_path=PROFILES_PATH if os.path.exists(PROFILES_PATH) else None
-)
-embedder = HuggingFaceEmbedder()
+_orchestrator: SQLOrchestrator | None = None
 
-print(f"[INFO] Initializing Runners via {BACKEND}...")
-if BACKEND == "vllm":
-    slm_runner = VLLMRunner(model_id=SLM_MODEL, gpu_memory_utilization=0.28)
-    sql_runner = VLLMRunner(model_id=SQL_MODEL, gpu_memory_utilization=0.56)
-else:
-    slm_runner = HFQuantizedRunner(model_id=SLM_MODEL)
-    sql_runner = HFQuantizedRunner(model_id=SQL_MODEL)
 
-orchestrator = SQLOrchestrator(
-    profiler=profiler,
-    sql_generator=sql_runner,
-    slm_runner=slm_runner,
-    embedder=embedder,
-    db_directory=DB_DIR,
-)
+def get_orchestrator() -> SQLOrchestrator:
+    global _orchestrator
+    if _orchestrator is None:
+        logger.info("Initializing Profiler and Embedder...")
+        profiler = DatabaseProfiler(
+            profiles_path=PROFILES_PATH if os.path.exists(PROFILES_PATH) else None
+        )
+        embedder = HuggingFaceEmbedder()
+
+        logger.info("Initializing Runners via %s...", BACKEND)
+        if BACKEND == "vllm":
+            slm_runner = VLLMRunner(model_id=SLM_MODEL, gpu_memory_utilization=0.28)
+            sql_runner = VLLMRunner(model_id=SQL_MODEL, gpu_memory_utilization=0.56)
+        else:
+            slm_runner = HFQuantizedRunner(model_id=SLM_MODEL)
+            sql_runner = HFQuantizedRunner(model_id=SQL_MODEL)
+
+        _orchestrator = SQLOrchestrator(
+            profiler=profiler,
+            sql_generator=sql_runner,
+            slm_runner=slm_runner,
+            embedder=embedder,
+            db_directory=DB_DIR,
+        )
+    return _orchestrator
 
 
 def run_agent_pipeline(
@@ -53,6 +63,7 @@ def run_agent_pipeline(
             "Please provide a valid question.",
         )
 
+    orchestrator = get_orchestrator()
     state = orchestrator.run(
         db_id=db_id.strip(), question=question.strip(), evidence=evidence.strip()
     )
@@ -149,4 +160,8 @@ with gr.Blocks(title="Stateful Text-to-SQL Multi-Model Agent") as demo:
     )
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    )
+    get_orchestrator()
     demo.launch(server_name="0.0.0.0", server_port=7860)

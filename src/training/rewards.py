@@ -2,6 +2,7 @@ import logging
 import re
 
 from src.sandbox.executor import execute_sql
+from src.sandbox.summarizer import canonicalize_rows
 
 logger = logging.getLogger(__name__)
 
@@ -108,8 +109,8 @@ def match_reward_func(
         gold_res = execute_sql(target_db, gold_sql, timeout_seconds=5.0)
 
         if cand_res.status == "SUCCESS" and gold_res.status == "SUCCESS":
-            cand_rows = set(cand_res.result or [])
-            gold_rows = set(gold_res.result or [])
+            cand_rows = canonicalize_rows(cand_res.result)
+            gold_rows = canonicalize_rows(gold_res.result)
             if cand_rows == gold_rows and cand_rows:
                 rewards.append(2.0)
             elif cand_rows == gold_rows:

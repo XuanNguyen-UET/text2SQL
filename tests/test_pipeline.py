@@ -11,6 +11,7 @@ from src.schema_linking.profiler import DatabaseProfile
 from src.training.rewards import (
     execution_reward_func,
     format_reward_func,
+    match_reward_func,
 )
 
 
@@ -34,7 +35,7 @@ def test_sandbox_allows_select(temp_test_db: str) -> None:
     assert res.status == "SUCCESS"
     assert res.result == [("Alice",)]
 
-
+refactor: polish dependency constraints, reward evaluation, and demo logging
 def test_sandbox_blocks_dml(temp_test_db: str) -> None:
     assert not is_readonly_query("DROP TABLE users;")
     assert not is_readonly_query("INSERT INTO users VALUES (3, 'Charlie', 35);")
@@ -86,6 +87,25 @@ def test_execution_reward(temp_test_db: str) -> None:
 
     assert good_reward[0] == 1.0
     assert bad_reward[0] == -0.5
+
+
+def test_match_reward(temp_test_db: str) -> None:
+    exact_completion = [
+        [{"content": "<answer>SELECT name FROM users ORDER BY id DESC;</answer>"}]
+    ]
+    duplicate_completion = [
+        [{"content": "<answer>SELECT 1 UNION ALL SELECT 1;</answer>"}]
+    ]
+    gold_sqls = ["SELECT name FROM users;", "SELECT 1;"]
+
+    rewards = match_reward_func(
+        ["q1", "q2"],
+        [exact_completion[0], duplicate_completion[0]],
+        gold_sqls=gold_sqls,
+        db_path=temp_test_db,
+    )
+    assert rewards[0] == 2.0
+    assert rewards[1] == 0.0
 
 
 def test_mini_ddl_validation() -> None:

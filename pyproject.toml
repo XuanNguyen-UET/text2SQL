@@ -3,6 +3,7 @@ name = "text2sql-agent"
 version = "0.1.0"
 description = "A stateful execution-guided Text-to-SQL framework using heterogeneous language models"
 readme = "README.md"
+license = { text = "MIT" }
 authors = [
     { name = "XuanNguyen-UET", email = "hale29012004@gmail.com" }
 ]
@@ -20,12 +21,9 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "sqlglot>=25.0.0",
     "torch>=2.4.0",
-    "transformers>=4.45.0",
+    "transformers>=4.45.0,<5.0.0",
     "vllm>=0.6.0",
 ]
-
-[project.scripts]
-text2sql-agent = "text2sql_agent:main"
 
 [project.optional-dependencies]
 train = [
@@ -34,6 +32,7 @@ train = [
     "datasets>=3.0.0",
     "func-timeout>=4.3.5",
     "peft>=0.12.0",
+    "pyarrow>=15.0.0,<19.0.0",
     "trl>=0.11.0",
     "wandb>=0.18.0",
 ]
@@ -45,11 +44,6 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-license = { text = "MIT" }
-authors = [
-    { name = "Cao Xuan Nguyen" }
-]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
