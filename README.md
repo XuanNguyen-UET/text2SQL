@@ -80,12 +80,11 @@ flowchart TD
 | :--- | :--- | :---: | :--- |
 | **Dense Embedder** | `BAAI/bge-small-en-v1.5` | 33M | Semantic table/column retrieval |
 | **Planner & Orchestrator** | `Qwen/Qwen3-4B-Instruct-2507` | 4B | Logical planning, Mini-DDL rewrite, state routing |
-| **SQL Synthesizer** | `NguyenCX/Qwen2.5_coder_7B_instruct_GRPO_BIRD` | 7B | Candidate SQL synthesis & error-driven repair |
+| **SQL Synthesizer** | [`NguyenCX/Qwen2.5_coder_7B_instruct_GRPO_BIRD`](https://huggingface.co/NguyenCX/Qwen2.5_coder_7B_instruct_GRPO_BIRD) | 7B | Candidate SQL synthesis & error-driven repair |
 
 | Benchmark | Split | Execution Accuracy (EX) | Valid Efficiency Score (VES) |
 | :--- | :---: | :---: | :---: |
-| **BIRD-SQL** | Dev | **64.27%** | **68.67%** |
-
+| [**BIRD-SQL**](https://bird-bench.github.io/) | Dev | **64.27%** | **68.67%** |
 ---
 
 ## 4. Repository Structure
